@@ -1,0 +1,26 @@
+version: '2'
+
+services:
+  master:
+    container_name: 'citus_master'
+    image: 'citusdata/citus:6.1.0'
+    ports: ['5433:5432']
+    labels: ['com.citusdata.role=Master']
+    volumes: ['/var/run/postgresql']
+  worker:
+    image: 'citusdata/citus:6.1.0'
+    labels: ['com.citusdata.role=Worker']
+  config:
+    container_name: 'citus_config'
+    image: 'citusdata/workerlist-gen:1.0.0'
+    volumes: ['/var/run/docker.sock:/tmp/docker.sock']
+    volumes_from: ['master']
+  web:
+    build: .
+    command: python3 manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - master
